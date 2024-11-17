@@ -6,6 +6,8 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
+
+    //Package Models -> Board, Coordinate, Food, Snake
     public static class Board {
         private final int size; // Store the size of the board, final ensures immutability
 
@@ -76,7 +78,47 @@ public class Main {
         }
     }
 
+    public static class Snake {
+        private final LinkedList<Coordinate> body = new LinkedList<>(); // Stores the snake's body segments
+        private final int boardSize; // Size of the board
 
+        // Constructor initializes the snake with the given initial size on a board
+        public Snake(int initialSize, int boardSize) {
+            this.boardSize = boardSize;
+            for (int i = 0; i < initialSize; i++) {
+                body.addFirst(new Coordinate(0, i)); // Start the snake at the top-left corner
+            }
+        }
+
+        // Getter for the snake's body
+        public LinkedList<Coordinate> getBody() {
+            return body;
+        }
+
+        // Getter for the snake's head
+        public Coordinate getHead() {
+            return body.getFirst(); // The first element of the list is the head
+        }
+
+        // Moves the snake in the given direction
+        public void move(Direction direction) {
+            Coordinate newHead = direction.move(getHead(), boardSize); // Calculate the new head position
+            body.addFirst(newHead); // Add the new head to the front of the body
+            body.removeLast(); // Remove the tail to maintain the size
+
+            // Check if the new head collides with the body
+            if (body.stream().skip(1).anyMatch(segment -> segment.equals(newHead))) {
+                throw new HitTrailError("Snake hit its own tail!");
+            }
+        }
+
+        // Grows the snake by adding a segment at the tail
+        public void grow() {
+            body.addLast(body.getLast()); // Duplicate the last segment to grow the snake
+        }
+    }
+
+    // Package Factory -> (BoardFactory , SnakeFactory)
     public static class BoardFactory {
         // Private constructor prevents instantiation
         private BoardFactory() {
@@ -139,54 +181,14 @@ public class Main {
         public abstract Coordinate move(Coordinate coordinate, int boardSize);
     }
 
-
-    public static class Snake {
-        private final LinkedList<Coordinate> body = new LinkedList<>(); // Stores the snake's body segments
-        private final int boardSize; // Size of the board
-
-        // Constructor initializes the snake with the given initial size on a board
-        public Snake(int initialSize, int boardSize) {
-            this.boardSize = boardSize;
-            for (int i = 0; i < initialSize; i++) {
-                body.addFirst(new Coordinate(0, i)); // Start the snake at the top-left corner
-            }
-        }
-
-        // Getter for the snake's body
-        public LinkedList<Coordinate> getBody() {
-            return body;
-        }
-
-        // Getter for the snake's head
-        public Coordinate getHead() {
-            return body.getFirst(); // The first element of the list is the head
-        }
-
-        // Moves the snake in the given direction
-        public void move(Direction direction) {
-            Coordinate newHead = direction.move(getHead(), boardSize); // Calculate the new head position
-            body.addFirst(newHead); // Add the new head to the front of the body
-            body.removeLast(); // Remove the tail to maintain the size
-
-            // Check if the new head collides with the body
-            if (body.stream().skip(1).anyMatch(segment -> segment.equals(newHead))) {
-                throw new HitTrailError("Snake hit its own tail!");
-            }
-        }
-
-        // Grows the snake by adding a segment at the tail
-        public void grow() {
-            body.addLast(body.getLast()); // Duplicate the last segment to grow the snake
-        }
-    }
-
+    // Package Error -> HitTrailError
     public static class HitTrailError extends RuntimeException{
         public HitTrailError(String message) {
             super(message);
         }
     }
 
-
+    // Main Class -> Game
     public static class Game {
         private static Game instance; // Singleton instance of the game
         private final Board board; // The game board
